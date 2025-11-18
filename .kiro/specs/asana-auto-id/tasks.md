@@ -48,7 +48,7 @@
   - **Результат: `uv run aa validate` проверяет .aa.yml и выводит ошибки или OK**
   - _Requirements: 2.1, 2.2, 7.1, 7.2, 7.3_
 
-- [-] 5. Реализовать ID Manager и тестовую команду
+- [x] 5. Реализовать ID Manager и тестовую команду
   - Создать aa/core/__init__.py и aa/core/id_manager.py
   - Реализовать extract_id() с regex для извлечения ID
   - Реализовать has_id() для проверки наличия ID
