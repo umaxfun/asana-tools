@@ -52,11 +52,19 @@ aa/
 ```python
 @click.command()
 @click.option('--config', default='.aa.yml', help='Path to config file')
-async def init(config: str) -> None:
+@click.option('-f', '--force', is_flag=True, help='Create template without interactive setup')
+async def init(config: str, force: bool) -> None:
     """Initialize aa configuration file"""
 ```
 
-Создает шаблон конфигурационного файла `.aa.yml`.
+По умолчанию работает в интерактивном режиме:
+1. Запрашивает Personal Access Token (скрытый ввод)
+2. Получает список всех проектов пользователя из Asana
+3. Предлагает выбрать проекты (множественный выбор)
+4. Запрашивает трехбуквенный код для каждого проекта (валидация: 3 заглавные буквы)
+5. Создает готовый конфиг с реальными данными и комментариями со ссылками на проекты
+
+С флагом `-f/--force` создает шаблон конфигурационного файла `.aa.yml` без интерактива.
 
 #### ScanCommand (`commands/scan.py`)
 ```python
@@ -98,6 +106,12 @@ class AsanaClient:
             headers={"Authorization": f"Bearer {token}"},
             timeout=30.0
         )
+    
+    async def get_workspaces(self) -> list[dict]:
+        """Получить список workspace пользователя"""
+    
+    async def get_projects(self, workspace_id: str) -> list[dict]:
+        """Получить все проекты в workspace"""
     
     async def get_project_tasks(self, project_id: str) -> list[dict]:
         """Получить все задачи проекта, отсортированные по дате создания"""
@@ -306,6 +320,18 @@ class TaskUpdate(BaseModel):
 ### Property 18: Duplicate ID detection
 *For any* set of tasks where two or more tasks have the same ID, the system should terminate with an error listing the conflicting tasks.
 **Validates: Requirements 9.3**
+
+### Property 19: Interactive init creates valid config
+*For any* valid Personal Access Token and selected projects, the interactive init should create a configuration file that passes Pydantic validation and includes project URL comments.
+**Validates: Requirements 1.5.5, 1.5.7**
+
+### Property 20: Project code format validation
+*For any* project code entered during interactive init, the system should accept only three uppercase letters and reject all other formats.
+**Validates: Requirements 1.5.4**
+
+### Property 21: Project URL comment format
+*For any* project added to config, the comment should contain a valid Asana project URL in format https://app.asana.com/0/{asana_id}.
+**Validates: Requirements 1.5.7**
 
 ## Обработка ошибок
 

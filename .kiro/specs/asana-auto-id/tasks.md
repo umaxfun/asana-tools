@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Создать минимальный запускаемый CLI с командой init
+- [x] 1. Создать минимальный запускаемый CLI с командой init
   - Настроить pyproject.toml с зависимостями (click, httpx, pydantic, pyyaml) и entry point aa
   - Создать структуру aa/ с __init__.py, __main__.py, cli.py
   - Создать aa/commands/init.py с командой для создания шаблона .aa.yml
@@ -10,6 +10,24 @@
   - Подключить команду init к главной CLI группе
   - **Результат: можно запустить `uv run aa init` и получить .aa.yml**
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 10.1, 11.1, 13.2, 13.4_
+
+- [-] 2. Добавить интерактивный режим для команды init (по умолчанию)
+  - Изменить логику команды init: по умолчанию интерактивный режим, флаг -f/--force для шаблона
+  - Реализовать запрос Personal Access Token через click.prompt с hide_input=True
+  - Создать базовый AsanaClient в aa/core/asana_client.py с методами get_workspaces() и get_projects()
+  - Получить все workspaces пользователя через Asana API
+  - Получить все проекты из всех workspaces
+  - Реализовать интерактивный выбор проектов (показать список с номерами, запросить выбор через запятую)
+  - Для каждого выбранного проекта запросить трехбуквенный код с валидацией (только заглавные буквы, ровно 3 символа)
+  - При записи конфига добавить комментарий со ссылкой на проект: # https://app.asana.com/0/{asana_id}
+  - Создать конфиг с реальным токеном, interactive=false и выбранными проектами
+  - **Результат: `uv run aa init` запрашивает токен, показывает проекты, создает готовый .aa.yml с комментариями-ссылками**
+  - _Requirements: 1.1, 1.2, 1.5.1, 1.5.2, 1.5.3, 1.5.4, 1.5.5, 1.5.6, 1.5.7_
+
+- [ ]* 2.1 Написать property тесты для интерактивной инициализации
+  - **Property 19: Interactive init creates valid config** (Requirements 1.5.5, 1.5.7)
+  - **Property 20: Project code format validation** (Requirements 1.5.4)
+  - **Property 21: Project URL comment format** (Requirements 1.5.7)
 
 - [ ] 3. Добавить Pydantic модели для конфига
   - Создать aa/models/__init__.py и aa/models/config.py
