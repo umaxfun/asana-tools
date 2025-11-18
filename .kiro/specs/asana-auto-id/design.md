@@ -111,7 +111,7 @@ class AsanaClient:
         """Получить список workspace пользователя"""
     
     async def get_projects(self, workspace_id: str) -> list[dict]:
-        """Получить все проекты в workspace"""
+        """Получить все активные (не архивные) проекты в workspace"""
     
     async def get_project_tasks(self, project_id: str) -> list[dict]:
         """Получить все задачи проекта, отсортированные по дате создания"""
@@ -191,7 +191,7 @@ class TaskProcessor:
 
 ```python
 class ProjectConfig(BaseModel):
-    code: str = Field(..., min_length=3, max_length=3, pattern="^[A-Z]{3}$")
+    code: str = Field(..., min_length=2, max_length=5, pattern="^[A-Z]{2,5}$")
     asana_id: str = Field(..., min_length=1)
 
 class Config(BaseModel):
@@ -322,15 +322,11 @@ class TaskUpdate(BaseModel):
 **Validates: Requirements 9.3**
 
 ### Property 19: Interactive init creates valid config
-*For any* valid Personal Access Token and selected projects, the interactive init should create a configuration file that passes Pydantic validation and includes project URL comments.
-**Validates: Requirements 1.5.5, 1.5.7**
+*For any* valid Personal Access Token, the interactive init should fetch all active (non-archived) projects from Asana and create a configuration file that passes Pydantic validation with the provided token and all active projects with URL comments.
+**Validates: Requirements 1.5.2, 1.5.3, 1.5.4, 1.5.5, 1.5.6**
 
 ### Property 20: Project code format validation
-*For any* project code entered during interactive init, the system should accept only three uppercase letters and reject all other formats.
-**Validates: Requirements 1.5.4**
-
-### Property 21: Project URL comment format
-*For any* project added to config, the comment should contain a valid Asana project URL in format https://app.asana.com/0/{asana_id}.
+*For any* project code in configuration, the system should accept only 2-5 uppercase letters and reject all other formats.
 **Validates: Requirements 1.5.7**
 
 ## Обработка ошибок
@@ -416,7 +412,7 @@ class TaskUpdate(BaseModel):
 ```python
 import re
 
-ID_PATTERN = r'^([A-Z]{3})-(\d+(?:-\d+)*)(?:\s|$)'
+ID_PATTERN = r'^([A-Z]{2,5})-(\d+(?:-\d+)*)(?:\s|$)'
 
 def extract_id(task_name: str, project_code: str) -> str | None:
     """
@@ -424,8 +420,8 @@ def extract_id(task_name: str, project_code: str) -> str | None:
     
     Примеры:
     - "PRJ-5 My task" -> "PRJ-5"
-    - "PRJ-5-2 Subtask" -> "PRJ-5-2"
-    - "PRJ-5-2-1 Nested" -> "PRJ-5-2-1"
+    - "AB-5-2 Subtask" -> "AB-5-2"
+    - "PROJ-5-2-1 Nested" -> "PROJ-5-2-1"
     - "My task" -> None
     """
     match = re.match(ID_PATTERN, task_name)
