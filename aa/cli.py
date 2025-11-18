@@ -4,6 +4,7 @@ import logging
 import click
 
 from aa.commands.init import init
+from aa.commands.validate import validate
 
 
 def setup_logging(debug: bool = False) -> None:
@@ -30,6 +31,7 @@ def cli(ctx: click.Context, config: str, debug: bool) -> None:
 
 # Register commands
 cli.add_command(init)
+cli.add_command(validate)
 
 
 def main() -> None:

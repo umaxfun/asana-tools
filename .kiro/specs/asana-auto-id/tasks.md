@@ -40,7 +40,7 @@
   - **Property 2: Configuration validation rejects invalid configs**
   - **Validates: Requirements 2.2**
 
-- [ ] 4. Добавить загрузку и валидацию конфига
+- [x] 4. Добавить загрузку и валидацию конфига
   - Создать aa/utils/__init__.py и aa/utils/config_loader.py
   - Реализовать load_config() с валидацией через Pydantic
   - Добавить обработку ошибок (файл не найден, невалидный YAML)
