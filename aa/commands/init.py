@@ -7,25 +7,22 @@ import click
 import yaml
 
 from aa.core.asana_client import AsanaClient
+from aa.models.config import Config, ProjectConfig
 
 
 logger = logging.getLogger(__name__)
 
 
-CONFIG_TEMPLATE = {
-    'asana_token': 'YOUR_ASANA_PERSONAL_ACCESS_TOKEN',
-    'interactive': False,
-    'projects': [
-        {
-            'code': 'PROJ',
-            'asana_id': '1234567890123456'
-        },
-        {
-            'code': 'TASK',
-            'asana_id': '9876543210987654'
-        }
-    ]
-}
+def create_template_config() -> Config:
+    """Create a template configuration using Pydantic models."""
+    return Config(
+        asana_token='YOUR_ASANA_PERSONAL_ACCESS_TOKEN',
+        interactive=False,
+        projects=[
+            ProjectConfig(code='PROJ', asana_id='1234567890123456'),
+            ProjectConfig(code='TASK', asana_id='9876543210987654')
+        ]
+    )
 
 
 async def fetch_all_projects(token: str) -> list[dict]:
@@ -57,19 +54,33 @@ async def fetch_all_projects(token: str) -> list[dict]:
 
 
 def write_config_with_comments(config_path: Path, token: str, projects: list[dict]) -> None:
-    """Write config file with project URL comments.
+    """Write config file with project URL comments using Pydantic models.
     
     Args:
         config_path: Path to write the config file
         token: Asana token
         projects: List of projects from Asana API
     """
+    # Create ProjectConfig instances with placeholder codes
+    project_configs = [
+        ProjectConfig(code='CODE', asana_id=project['gid'])
+        for project in projects
+    ]
+    
+    # Create Config instance
+    config = Config(
+        asana_token=token,
+        interactive=False,
+        projects=project_configs
+    )
+    
+    # Write config with comments
     lines = []
-    lines.append(f"asana_token: {repr(token)}")
-    lines.append("interactive: false")
+    lines.append(f"asana_token: {repr(config.asana_token)}")
+    lines.append(f"interactive: {str(config.interactive).lower()}")
     lines.append("projects:")
     
-    for project in projects:
+    for i, project in enumerate(projects):
         asana_id = project['gid']
         project_name = project['name']
         
@@ -112,9 +123,13 @@ def init(ctx: click.Context, force: bool, config: str, debug: bool) -> None:
     
     try:
         if force:
-            # Force mode: create template
+            # Force mode: create template using Pydantic model
+            template_config = create_template_config()
+            
+            # Convert to dict and write as YAML
+            config_dict = template_config.model_dump()
             with open(config_file, 'w') as f:
-                yaml.dump(CONFIG_TEMPLATE, f, default_flow_style=False, sort_keys=False)
+                yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
             
             logger.info(f"Created template configuration file: {config_path}")
             click.echo(f"✓ Created template configuration file: {config_path}")

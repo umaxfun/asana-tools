@@ -29,7 +29,7 @@
   - **Property 19: Interactive init creates valid config** (Requirements 1.5.2, 1.5.3, 1.5.4, 1.5.5, 1.5.6)
   - **Property 20: Project code format validation** (Requirements 1.5.7)
 
-- [ ] 3. Добавить Pydantic модели для конфига
+- [x] 3. Добавить Pydantic модели для конфига
   - Создать aa/models/__init__.py и aa/models/config.py
   - Реализовать ProjectConfig и Config с валидацией
   - Обновить команду init чтобы генерировать конфиг через модели
