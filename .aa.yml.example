@@ -1,0 +1,8 @@
+asana_token: 'qweqweqweqwe'
+interactive: false
+projects:
+  # Project Name
+  # https://app.asana.com/0/12345
+  - code: TEST  # TODO: Replace with 2-5-letter code
+    asana_id: '12345'
+
