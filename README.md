@@ -2,25 +2,22 @@
 
 Automatic human-readable ID assignment for Asana tasks and subtasks.
 
-## Overview
+## What is this?
 
-`aa` is a command-line tool that automatically assigns short, human-readable IDs to your Asana tasks. It adds prefixes like `PRJ-5` or `PRJ-5-1` to task names, making them easier to reference in discussions, documentation, and team communication.
+`aa-cli` automatically adds short, readable IDs to your Asana tasks - like `PRJ-5` or `PRJ-5-1`. This makes tasks easier to reference in discussions, documentation, and team communication.
 
 **Key Features:**
-- 🔢 Automatic ID assignment with hierarchical numbering
+- 🔢 Automatic hierarchical ID assignment
 - 🔄 Preserves existing IDs and detects conflicts
-- 🌳 Supports nested subtask hierarchies (e.g., `PRJ-5-2-3`)
-- 🚀 Async processing for fast performance
+- 🌳 Supports unlimited nesting depth
+- 🚀 Fast async processing
 - 🔍 Dry-run mode to preview changes
-- 📦 Multiple project support from a single config
 
 ## Installation
 
 ### Prerequisites
-- Python 3.12 or higher
-- [UV package manager](https://docs.astral.sh/uv/)
 
-### Install UV
+Install [UV](https://docs.astral.sh/uv/) if you don't have it:
 
 ```bash
 # macOS/Linux
@@ -30,211 +27,65 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### Install aa
+### Usage
+
+**No installation needed!** Just use `uvx`:
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd asana-tools
+uvx aa-cli --help
+```
 
-# Sync dependencies and install the command
-uv sync
+**Optional:** Install globally for shorter commands:
 
-# Verify installation
-uv run aa --help
+```bash
+uv tool install aa-cli
+aa-cli --help
 ```
 
 ## Quick Start
 
-### 1. Initialize Configuration
+### 1. Initialize
 
-Run the interactive setup to create your configuration file:
+Create your configuration file:
 
 ```bash
-uv run aa init
+uvx aa-cli init
 ```
 
 This will:
-- Prompt for your Asana Personal Access Token (hidden input)
-- Fetch all your active projects from Asana
-- Create `.aa.yml` with all projects and helpful comments
+- Prompt for your Asana Personal Access Token
+- Fetch all your projects automatically
+- Create `.aa.yml` with everything configured
 
-**Alternative:** Create a template manually:
+**Get your token:** [Asana Developer Console](https://app.asana.com/0/developer-console) → "Create new token"
 
-```bash
-uv run aa init --force
-```
+### 2. Scan
 
-### 2. Scan Your Projects
-
-Scan your projects to build the ID cache:
+Build the ID cache from your existing tasks:
 
 ```bash
-uv run aa scan
+uvx aa-cli scan
 ```
 
-This creates `.aa.cache.yaml` with the current state of IDs in your projects.
+### 3. Update
 
-### 3. Assign IDs
-
-Preview what changes will be made:
+Preview changes:
 
 ```bash
-uv run aa update --dry-run
+uvx aa-cli update --dry-run
 ```
 
-Apply the changes:
+Apply IDs to tasks:
 
 ```bash
-uv run aa update
+uvx aa-cli update
 ```
 
-## Usage
+Done! Your tasks now have IDs like `PRJ-1`, `PRJ-2`, etc.
 
-### Commands
-
-#### `aa init`
-
-Initialize configuration file.
-
-```bash
-# Interactive mode (default) - fetches your projects
-uv run aa init
-
-# Create template file
-uv run aa init --force
-
-# Specify custom config path
-uv run aa init --config my-config.yml
-```
-
-#### `aa scan`
-
-Scan projects and update cache with existing IDs.
-
-```bash
-# Scan all projects
-uv run aa scan
-
-# Scan specific project
-uv run aa scan --project PRJ
-
-# Ignore conflicts and update cache anyway
-uv run aa scan --ignore-conflicts
-
-# Verbose output
-uv run aa scan -v
-
-# Very verbose (includes HTTP logs)
-uv run aa scan -vv
-```
-
-#### `aa update`
-
-Assign IDs to tasks without them.
-
-```bash
-# Preview changes (dry-run)
-uv run aa update --dry-run
-
-# Update all projects
-uv run aa update
-
-# Update specific project
-uv run aa update --project PRJ
-
-# Ignore conflicts during scan
-uv run aa update --ignore-conflicts
-
-# Verbose output
-uv run aa update -v
-```
-
-### Global Options
-
-All commands support these global options:
-
-- `--config TEXT` - Path to config file (default: `.aa.yml`)
-- `-v, --verbose` - Increase verbosity (use `-vv` for debug level)
-- `--help` - Show help message
-
-## Configuration Format
-
-### `.aa.yml`
-
-The configuration file defines your Asana token and projects:
-
-```yaml
-asana_token: 'your-personal-access-token'
-interactive: false
-projects:
-  # Project Name
-  # https://app.asana.com/0/1234567890
-  - code: PRJ  # 2-5 uppercase letters
-    asana_id: '1234567890'
-  
-  # Another Project
-  # https://app.asana.com/0/9876543210
-  - code: TSK
-    asana_id: '9876543210'
-```
-
-**Fields:**
-- `asana_token` (required) - Your Asana Personal Access Token
-- `interactive` (optional) - Set to `false` to disable interactive prompts
-- `projects` (required) - List of projects to manage
-  - `code` (required) - 2-5 uppercase letters, used as ID prefix
-  - `asana_id` (required) - Asana project ID (numeric string)
-
-**Getting Your Personal Access Token:**
-1. Go to [Asana Developer Console](https://app.asana.com/0/developer-console)
-2. Click "Create new token"
-3. Copy the token and paste it in your config
-
-## Cache Format
-
-### `.aa.cache.yaml`
-
-The cache file tracks the last assigned IDs for each project:
-
-```yaml
-projects:
-  PRJ:
-    last_root: 42        # Last root task ID (PRJ-42)
-    subtasks:
-      '5': 3             # PRJ-5-3 is the last subtask of PRJ-5
-      '12': 7            # PRJ-12-7 is the last subtask of PRJ-12
-      '12-2': 4          # PRJ-12-2-4 is the last subtask of PRJ-12-2
-  TSK:
-    last_root: 15
-    subtasks: {}
-```
-
-**Structure:**
-- `projects` - Dictionary keyed by project code
-  - `last_root` - Highest root task number assigned
-  - `subtasks` - Dictionary mapping parent IDs to their last subtask number
-    - Key format: `"5"` for root task PRJ-5, `"12-2"` for subtask PRJ-12-2
-    - Value: Last subtask number assigned to that parent
-
-**Note:** This file is automatically managed by `aa scan` and `aa update`. You typically don't need to edit it manually.
-
-## ID Format and Hierarchy
-
-### ID Structure
+## ID Format
 
 IDs follow a hierarchical pattern:
-
-- **Root tasks:** `CODE-N` (e.g., `PRJ-5`)
-- **Subtasks:** `CODE-N-M` (e.g., `PRJ-5-1`)
-- **Nested subtasks:** `CODE-N-M-K` (e.g., `PRJ-5-1-2`)
-- **Deeper nesting:** `CODE-N-M-K-...` (unlimited depth)
-
-Where:
-- `CODE` = Project code (2-5 uppercase letters)
-- `N, M, K` = Sequential numbers starting from 1
-
-### Example Hierarchy
 
 ```
 PRJ-1: Implement authentication
@@ -245,188 +96,178 @@ PRJ-1: Implement authentication
 └── PRJ-1-3: Build API endpoints
 
 PRJ-2: Setup CI/CD
-├── PRJ-2-1: Configure GitHub Actions
-└── PRJ-2-2: Add deployment scripts
-
-PRJ-3: Documentation
+└── PRJ-2-1: Configure GitHub Actions
 ```
 
-### How IDs Are Assigned
+- **Root tasks:** `CODE-N` (e.g., `PRJ-5`)
+- **Subtasks:** `CODE-N-M` (e.g., `PRJ-5-1`)
+- **Nested:** `CODE-N-M-K` (e.g., `PRJ-5-1-2`)
+- Unlimited depth supported
 
-1. **Root tasks** get sequential numbers: `PRJ-1`, `PRJ-2`, `PRJ-3`, ...
-2. **Subtasks** inherit parent ID and add their own number: `PRJ-1-1`, `PRJ-1-2`, ...
-3. **Nested subtasks** continue the pattern: `PRJ-1-2-1`, `PRJ-1-2-2`, ...
-4. **Existing IDs** are preserved - tasks with IDs are skipped
-5. **Counters** are tracked in the cache to ensure no duplicates
+## Commands
 
-### Task Name Format
+### `init`
 
-IDs are prepended to task names:
+Initialize configuration:
 
+```bash
+# Interactive mode (recommended)
+uvx aa-cli init
+
+# Create template only
+uvx aa-cli init --force
 ```
-Before: "Implement user authentication"
-After:  "PRJ-5 Implement user authentication"
 
-Before: "Add validation"
-After:  "PRJ-5-2 Add validation"
+### `scan`
+
+Scan projects and update cache:
+
+```bash
+# Scan all projects
+uvx aa-cli scan
+
+# Scan specific project
+uvx aa-cli scan --project PRJ
+
+# Ignore conflicts
+uvx aa-cli scan --ignore-conflicts
+```
+
+### `update`
+
+Assign IDs to tasks:
+
+```bash
+# Preview changes
+uvx aa-cli update --dry-run
+
+# Apply changes
+uvx aa-cli update
+
+# Update specific project
+uvx aa-cli update --project PRJ
+```
+
+### Options
+
+All commands support:
+
+- `--config PATH` - Custom config file location
+- `-v` - Verbose output (use `-vv` for debug)
+- `--help` - Show help
+
+## Configuration
+
+### `.aa.yml`
+
+```yaml
+asana_token: 'your-personal-access-token'
+projects:
+  - code: PRJ      # 2-5 uppercase letters
+    asana_id: '1234567890'
+  
+  - code: TSK
+    asana_id: '9876543210'
+```
+
+**Finding project IDs:**
+- Open project in Asana
+- Look at URL: `https://app.asana.com/0/1234567890/...`
+- The number after `/0/` is your project ID
+
+Or just use `uvx aa-cli init` - it fetches everything automatically!
+
+### `.aa.cache.yaml`
+
+Automatically managed by `scan` and `update`. Tracks the last assigned ID for each project:
+
+```yaml
+projects:
+  PRJ:
+    last_root: 42
+    subtasks:
+      '5': 3      # PRJ-5-3 is last subtask of PRJ-5
 ```
 
 ## Workflow
 
-### Typical Workflow
-
-1. **Initial Setup**
-   ```bash
-   uv run aa init              # Create config with your projects
-   uv run aa scan              # Build initial cache
-   uv run aa update --dry-run  # Preview changes
-   uv run aa update            # Apply IDs
-   ```
-
-2. **Regular Usage**
-   ```bash
-   # When you add new tasks in Asana:
-   uv run aa update            # Assign IDs to new tasks
-   ```
-
-3. **Adding New Projects**
-   - Edit `.aa.yml` to add the new project
-   - Run `uv run aa scan --project NEW` to initialize cache
-   - Run `uv run aa update --project NEW` to assign IDs
-
-### Conflict Handling
-
-**What is a conflict?**
-- An ID exists in Asana that's higher than the cached value
-- Duplicate IDs found in different tasks
-
-**When conflicts occur:**
-```bash
-# Default: scan/update stops with an error
-uv run aa scan
-# Error: Conflict detected! Task "PRJ-50" found but cache shows last_root: 42
-
-# Option 1: Fix manually (update cache or rename tasks)
-# Option 2: Ignore and update cache to match Asana
-uv run aa scan --ignore-conflicts
-```
-
-**Best practice:** Investigate conflicts before using `--ignore-conflicts` to ensure no IDs were assigned outside of `aa`.
-
-## Advanced Usage
-
-### Multiple Projects
-
-Process all projects at once:
-```bash
-uv run aa update
-```
-
-Process specific project:
-```bash
-uv run aa update --project PRJ
-```
-
-### Custom Config Location
+### Regular Usage
 
 ```bash
-uv run aa --config ~/my-configs/asana.yml scan
-uv run aa --config ~/my-configs/asana.yml update
+# Add new tasks in Asana, then:
+uvx aa-cli update
 ```
 
-### Debugging
+### Adding New Projects
 
-Enable verbose logging:
+1. Edit `.aa.yml` to add the project
+2. Run `uvx aa-cli scan --project NEW`
+3. Run `uvx aa-cli update --project NEW`
+
+### Handling Conflicts
+
+If someone manually added IDs or cache is out of sync:
+
 ```bash
-# INFO level
-uv run aa scan -v
+# Review the conflict
+uvx aa-cli scan
 
-# DEBUG level (includes HTTP requests)
-uv run aa scan -vv
+# If safe, update cache to match Asana
+uvx aa-cli scan --ignore-conflicts
 ```
-
-### Dry-Run Mode
-
-Always preview changes before applying:
-```bash
-uv run aa update --dry-run
-```
-
-This shows:
-- Which tasks will get IDs
-- What the new names will be
-- No changes are made to Asana or cache
 
 ## Troubleshooting
 
-### "Config file not found"
+**"Config file not found"**
+- Run `uvx aa-cli init` first
 
-Make sure you've run `uv run aa init` or created `.aa.yml` manually.
+**"Invalid token" or 401 errors**
+- Generate new token at [Asana Developer Console](https://app.asana.com/0/developer-console)
+- Update `.aa.yml`
 
-### "Invalid token" or 401 errors
+**"Conflict detected"**
+- Someone may have manually added IDs
+- Review tasks in Asana
+- Use `--ignore-conflicts` if safe
 
-Your Asana token may be expired or invalid. Generate a new token and update `.aa.yml`.
-
-### "Conflict detected"
-
-Someone may have manually added IDs or the cache is out of sync. Options:
-1. Review the conflicting tasks in Asana
-2. Update the cache manually if needed
-3. Use `--ignore-conflicts` to auto-update cache
-
-### Tasks not getting IDs
-
-Check that:
-- Tasks don't already have IDs (they're skipped)
-- You're running `update`, not just `scan`
-- You're not in `--dry-run` mode
-
-### Rate limiting
-
-Asana API has rate limits (1500 requests/minute). The tool includes automatic retry logic with exponential backoff.
+**Tasks not getting IDs**
+- Check if tasks already have IDs (they're skipped)
+- Make sure you're running `update`, not just `scan`
+- Remove `--dry-run` flag
 
 ## Development
+
+For contributors and developers:
+
+### Setup
+
+```bash
+git clone https://github.com/umaxfun/asana-tools
+cd asana-tools
+uv sync
+```
+
+### Run Locally
+
+```bash
+uv run aa-cli --help
+```
 
 ### Project Structure
 
 ```
-asana-tools/
-├── aa/
-│   ├── __init__.py
-│   ├── __main__.py
-│   ├── cli.py              # Main CLI entry point
-│   ├── commands/           # CLI commands
-│   │   ├── init.py
-│   │   ├── scan.py
-│   │   └── update.py
-│   ├── core/               # Business logic
-│   │   ├── asana_client.py
-│   │   ├── id_manager.py
-│   │   └── task_processor.py
-│   ├── models/             # Data models
-│   │   ├── config.py
-│   │   ├── cache.py
-│   │   └── task.py
-│   └── utils/              # Utilities
-│       ├── config_loader.py
-│       └── cache_manager.py
-├── .aa.yml                 # Config file (gitignored)
-├── .aa.cache.yaml          # Cache file (gitignored)
-├── pyproject.toml          # Project metadata
-└── README.md
+aa/
+├── cli.py              # Main CLI entry point
+├── commands/           # Command implementations
+├── core/               # Business logic
+├── models/             # Data models
+└── utils/              # Utilities
 ```
 
-### Running Tests
+### Testing
 
 ```bash
-# Install dev dependencies
-uv sync
-
-# Run tests
 uv run pytest
-
-# Run with coverage
-uv run pytest --cov=aa
 ```
 
 ### Adding Dependencies
@@ -437,14 +278,9 @@ uv add <package-name>
 
 ## License
 
-[Your License Here]
-
-## Contributing
-
-[Your Contributing Guidelines Here]
+MIT
 
 ## Support
 
-For issues and questions:
-- Open an issue on GitHub
+- [Open an issue](https://github.com/umaxfun/asana-tools/issues)
 - Check existing issues for solutions
