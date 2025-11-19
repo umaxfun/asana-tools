@@ -89,7 +89,7 @@
   - **Property 3: Task sorting by creation date**
   - **Validates: Requirements 2.3**
 
-- [ ] 8. Реализовать команду aa scan
+- [x] 8. Реализовать команду aa scan
   - Создать aa/commands/scan.py
   - Добавить опции --config, --project, --debug, --ignore-conflicts
   - Реализовать загрузку конфига, получение задач, извлечение ID

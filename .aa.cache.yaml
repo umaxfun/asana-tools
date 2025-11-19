@@ -4,7 +4,10 @@ projects:
     subtasks:
       '5': 3
       '12': 7
-      '12-2': 4
+      12-2: 4
   TSK:
     last_root: 15
+    subtasks: {}
+  AL:
+    last_root: 0
     subtasks: {}

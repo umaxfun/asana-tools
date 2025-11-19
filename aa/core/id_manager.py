@@ -219,3 +219,106 @@ class IDManager:
         
         logger.debug(f"Maximum root ID for {project_code}: {max_id}")
         return max_id
+    
+    def detect_conflicts(self, existing_ids: list[str], project_code: str) -> list[str]:
+        """Detect conflicts between cache and existing IDs in Asana.
+        
+        A conflict occurs when:
+        1. An existing root task ID is greater than last_root in cache
+        2. Duplicate IDs exist in the task list
+        
+        Args:
+            existing_ids: List of task IDs found in Asana
+            project_code: The project code to check
+            
+        Returns:
+            List of conflict messages (empty if no conflicts)
+            
+        Examples:
+            >>> from aa.models.cache import CacheData, ProjectCache
+            >>> cache = CacheData(projects={'PRJ': ProjectCache(last_root=5)})
+            >>> manager = IDManager(cache)
+            >>> manager.detect_conflicts(['PRJ-3', 'PRJ-10'], 'PRJ')
+            ['Root task ID PRJ-10 is greater than cached last_root (5)']
+            >>> manager.detect_conflicts(['PRJ-3', 'PRJ-3'], 'PRJ')
+            ['Duplicate ID found: PRJ-3']
+        """
+        conflicts = []
+        
+        # Get project cache
+        project_cache = self.cache_data.projects.get(project_code)
+        if not project_cache:
+            # No cache exists, no conflicts possible
+            logger.debug(f"No cache for project {project_code}, no conflicts")
+            return conflicts
+        
+        # Check for duplicate IDs
+        seen_ids = set()
+        for task_id in existing_ids:
+            if task_id in seen_ids:
+                conflict_msg = f"Duplicate ID found: {task_id}"
+                conflicts.append(conflict_msg)
+                logger.warning(conflict_msg)
+            seen_ids.add(task_id)
+        
+        # Check for root task IDs greater than cached last_root
+        root_pattern = re.compile(rf'^{re.escape(project_code)}-(\d+)$')
+        for task_id in existing_ids:
+            match = root_pattern.match(task_id)
+            if match:
+                id_number = int(match.group(1))
+                if id_number > project_cache.last_root:
+                    conflict_msg = f"Root task ID {task_id} is greater than cached last_root ({project_cache.last_root})"
+                    conflicts.append(conflict_msg)
+                    logger.warning(conflict_msg)
+        
+        if conflicts:
+            logger.warning(f"Found {len(conflicts)} conflict(s) for project {project_code}")
+        else:
+            logger.debug(f"No conflicts detected for project {project_code}")
+        
+        return conflicts
+    
+    def update_cache_for_id(self, task_id: str, project_code: str) -> None:
+        """Update cache after assigning an ID to a task.
+        
+        Updates the appropriate counter (last_root or subtasks) based on the ID format.
+        
+        Args:
+            task_id: The ID that was assigned (e.g., "PRJ-6" or "PRJ-5-3")
+            project_code: The project code
+            
+        Examples:
+            >>> from aa.models.cache import CacheData, ProjectCache
+            >>> cache = CacheData(projects={'PRJ': ProjectCache(last_root=5)})
+            >>> manager = IDManager(cache)
+            >>> manager.update_cache_for_id('PRJ-6', 'PRJ')
+            >>> manager.cache_data.projects['PRJ'].last_root
+            6
+            >>> manager.update_cache_for_id('PRJ-6-1', 'PRJ')
+            >>> manager.cache_data.projects['PRJ'].subtasks['6']
+            1
+        """
+        # Ensure project cache exists
+        if project_code not in self.cache_data.projects:
+            self.cache_data.projects[project_code] = ProjectCache()
+        
+        project_cache = self.cache_data.projects[project_code]
+        
+        # Extract numeric part (remove project code prefix)
+        numeric_part = task_id.replace(f"{project_code}-", "", 1)
+        
+        # Check if this is a root task (no dashes in numeric part) or subtask
+        if '-' not in numeric_part:
+            # Root task: update last_root
+            root_number = int(numeric_part)
+            project_cache.last_root = root_number
+            logger.debug(f"Updated last_root for {project_code} to {root_number}")
+        else:
+            # Subtask: update subtasks counter
+            # Split to get parent and subtask number
+            parts = numeric_part.rsplit('-', 1)
+            parent_numeric = parts[0]
+            subtask_number = int(parts[1])
+            project_cache.subtasks[parent_numeric] = subtask_number
+            logger.debug(f"Updated subtask counter for {project_code}-{parent_numeric} to {subtask_number}")
