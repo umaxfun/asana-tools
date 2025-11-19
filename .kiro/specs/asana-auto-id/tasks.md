@@ -104,7 +104,7 @@
   - **Property 17: Conflict resolution with ignore flag** (Requirements 9.2)
   - **Property 18: Duplicate ID detection** (Requirements 9.3)
 
-- [ ] 9. Реализовать Task Processor и команду aa update с dry-run
+- [x] 9. Реализовать Task Processor и команду aa update с dry-run
   - Создать aa/core/task_processor.py с TaskProcessor
   - Реализовать process_task_hierarchy() для рекурсивной обработки
   - Добавить update_cache_for_id() в IDManager

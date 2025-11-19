@@ -26,7 +26,8 @@ async def scan_project(
     project_id: str,
     asana_client: AsanaClient,
     id_manager: IDManager,
-    ignore_conflicts: bool = False
+    ignore_conflicts: bool = False,
+    silent: bool = False
 ) -> dict[str, any]:
     """Scan a single project and extract existing IDs.
     
@@ -43,11 +44,13 @@ async def scan_project(
     Raises:
         ScanError: If conflicts detected and ignore_conflicts is False
     """
-    logger.info(f"Scanning project {project_code} (ID: {project_id})")
+    if not silent:
+        logger.info(f"Scanning project {project_code} (ID: {project_id})")
     
     # Get all tasks from project
     tasks = await asana_client.get_project_tasks(project_id)
-    logger.info(f"Found {len(tasks)} tasks in project {project_code}")
+    if not silent:
+        logger.info(f"Found {len(tasks)} tasks in project {project_code}")
     
     # Extract existing IDs from task names
     existing_ids = []
@@ -56,9 +59,11 @@ async def scan_project(
         task_id = id_manager.extract_id(task_name, project_code)
         if task_id:
             existing_ids.append(task_id)
-            logger.debug(f"Found existing ID: {task_id} in task '{task_name}'")
+            if not silent:
+                logger.debug(f"Found existing ID: {task_id} in task '{task_name}'")
     
-    logger.info(f"Found {len(existing_ids)} existing IDs in project {project_code}")
+    if not silent:
+        logger.info(f"Found {len(existing_ids)} existing IDs in project {project_code}")
     
     # Detect conflicts
     conflicts = id_manager.detect_conflicts(existing_ids, project_code)
@@ -124,7 +129,8 @@ async def scan_project(
 async def scan_projects_async(
     config: Config,
     project_code: Optional[str],
-    ignore_conflicts: bool
+    ignore_conflicts: bool,
+    silent: bool = False
 ) -> None:
     """Async implementation of project scanning.
     
@@ -159,7 +165,8 @@ async def scan_projects_async(
             # Scan all projects
             projects_to_scan = config.projects
         
-        logger.info(f"Scanning {len(projects_to_scan)} project(s)")
+        if not silent:
+            logger.info(f"Scanning {len(projects_to_scan)} project(s)")
         
         # Scan each project
         results = []
@@ -170,7 +177,8 @@ async def scan_projects_async(
                     project.asana_id,
                     asana_client,
                     id_manager,
-                    ignore_conflicts
+                    ignore_conflicts,
+                    silent
                 )
                 results.append(result)
             except ScanError:
@@ -182,18 +190,20 @@ async def scan_projects_async(
         
         # Save updated cache
         save_cache(id_manager.cache_data)
-        logger.info("Cache updated successfully")
+        if not silent:
+            logger.info("Cache updated successfully")
         
-        # Print summary
-        click.echo("\n=== Scan Summary ===")
-        for result in results:
-            click.echo(f"\nProject: {result['project_code']}")
-            click.echo(f"  Total tasks: {result['total_tasks']}")
-            click.echo(f"  Tasks with IDs: {result['tasks_with_ids']}")
-            if result['conflicts']:
-                click.echo(f"  Conflicts: {len(result['conflicts'])} (resolved with --ignore-conflicts)")
-        
-        click.echo(f"\n✓ Cache saved to .aa.cache.yaml")
+        # Print summary (skip in silent mode)
+        if not silent:
+            click.echo("\n=== Scan Summary ===")
+            for result in results:
+                click.echo(f"\nProject: {result['project_code']}")
+                click.echo(f"  Total tasks: {result['total_tasks']}")
+                click.echo(f"  Tasks with IDs: {result['tasks_with_ids']}")
+                if result['conflicts']:
+                    click.echo(f"  Conflicts: {len(result['conflicts'])} (resolved with --ignore-conflicts)")
+            
+            click.echo(f"\n✓ Cache saved to .aa.cache.yaml")
         
     finally:
         await asana_client.close()
@@ -202,9 +212,9 @@ async def scan_projects_async(
 @click.command()
 @click.option('--config', default='.aa.yml', help='Path to config file')
 @click.option('--project', help='Project code to scan (default: all)')
-@click.option('--debug', is_flag=True, help='Enable debug logging')
+@click.option('-v', '--verbose', count=True, help='Increase verbosity (-v for INFO, -vv for DEBUG)')
 @click.option('--ignore-conflicts', is_flag=True, help='Ignore ID conflicts and update cache')
-def scan(config: str, project: Optional[str], debug: bool, ignore_conflicts: bool) -> None:
+def scan(config: str, project: Optional[str], verbose: int, ignore_conflicts: bool) -> None:
     """Scan projects and update cache with existing IDs.
     
     This command:
@@ -219,10 +229,18 @@ def scan(config: str, project: Optional[str], debug: bool, ignore_conflicts: boo
         aa scan                    # Scan all projects
         aa scan --project PRJ      # Scan specific project
         aa scan --ignore-conflicts # Ignore conflicts and update cache
+        aa scan -v                 # Verbose output
+        aa scan -vv                # Very verbose output with HTTP logs
     """
-    # Setup logging if debug flag is set
-    if debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+    # Setup logging based on verbosity (override CLI group setting)
+    if verbose > 0:
+        level = logging.INFO if verbose == 1 else logging.DEBUG
+        logging.getLogger().setLevel(level)
+        # Suppress noisy third-party loggers at INFO level
+        if verbose == 1:
+            logging.getLogger('httpx').setLevel(logging.WARNING)
+            logging.getLogger('httpcore').setLevel(logging.WARNING)
+            logging.getLogger('asyncio').setLevel(logging.WARNING)
     
     try:
         # Load configuration
