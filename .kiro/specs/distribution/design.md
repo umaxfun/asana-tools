@@ -76,7 +76,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aa = "aa.cli:main"
+aa-cli = "aa.cli:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -85,7 +85,7 @@ build-backend = "hatchling.build"
 
 **Принципы:**
 - Имя пакета `aa-cli` для избежания trademark проблем
-- Команда остается `aa` для удобства
+- Команда также `aa-cli` для простоты использования с uvx
 - Минимальные зависимости
 - Использование современного build backend (hatchling)
 
@@ -138,10 +138,10 @@ uvx aa-cli update
 # Установка
 uv tool install aa-cli
 
-# Теперь команда aa доступна глобально
-aa init
-aa scan
-aa update
+# Теперь команда aa-cli доступна глобально
+aa-cli init
+aa-cli scan
+aa-cli update
 
 # Обновление
 uv tool upgrade aa-cli
@@ -176,7 +176,7 @@ uv tool uninstall aa-cli
     ],
     "entry_points": {
         "console_scripts": [
-            "aa=aa.cli:main"
+            "aa-cli=aa.cli:main"
         ]
     }
 }
@@ -203,15 +203,15 @@ Release v0.1.0
 *Свойство - это характеристика или поведение, которое должно выполняться для всех валидных выполнений системы - по сути, формальное утверждение о том, что система должна делать. Свойства служат мостом между человеко-читаемыми спецификациями и машинно-проверяемыми гарантиями корректности.*
 
 ### Property 1: Package name consistency
-*For any* установленный пакет, имя пакета на PyPI должно быть `aa-cli`, а команда в терминале должна быть `aa`
+*For any* установленный пакет, имя пакета на PyPI должно быть `aa-cli`, и команда в терминале должна быть `aa-cli`
 **Validates: Requirements 3.2, 3.3**
 
 ### Property 2: Installation method equivalence
-*For any* метод установки (uvx, uv tool, homebrew), функциональность команды `aa` должна быть идентичной
+*For any* метод установки (uvx, uv tool), функциональность команды `aa-cli` должна быть идентичной
 **Validates: Requirements 9.5**
 
 ### Property 3: Version consistency
-*For any* релиз, версия в pyproject.toml, версия на PyPI, версия в GitHub Release и версия выводимая командой `aa --version` должны совпадать
+*For any* релиз, версия в pyproject.toml, версия на PyPI и версия в GitHub Release должны совпадать
 **Validates: Requirements 7.5**
 
 ### Property 4: Dependency isolation

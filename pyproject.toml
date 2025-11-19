@@ -30,7 +30,7 @@ Repository = "https://github.com/umaxfun/asana-tools"
 Issues = "https://github.com/umaxfun/asana-tools/issues"
 
 [project.scripts]
-aa = "aa.cli:main"
+aa-cli = "aa.cli:main"
 
 [tool.uv]
 package = true
