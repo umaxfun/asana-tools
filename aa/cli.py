@@ -6,6 +6,7 @@ import click
 from aa.commands.init import init
 from aa.commands.validate import validate
 from aa.commands.test_id import test_id
+from aa.commands.cache_info import cache_info
 
 
 def setup_logging(debug: bool = False) -> None:
@@ -34,6 +35,7 @@ def cli(ctx: click.Context, config: str, debug: bool) -> None:
 cli.add_command(init)
 cli.add_command(validate)
 cli.add_command(test_id)
+cli.add_command(cache_info)
 
 
 def main() -> None:

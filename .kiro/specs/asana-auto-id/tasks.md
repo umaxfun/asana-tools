@@ -63,7 +63,7 @@
   - **Property 9: Subtask ID format** (Requirements 3.4)
   - **Property 10: Nested subtask ID format** (Requirements 3.5)
 
-- [ ] 6. Добавить работу с кэшем
+- [x] 6. Добавить работу с кэшем
   - Создать aa/models/cache.py с ProjectCache и CacheData
   - Создать aa/utils/cache_manager.py с load_cache() и save_cache()
   - Добавить find_max_id() в IDManager

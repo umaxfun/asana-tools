@@ -1,0 +1,10 @@
+projects:
+  PRJ:
+    last_root: 42
+    subtasks:
+      '5': 3
+      '12': 7
+      '12-2': 4
+  TSK:
+    last_root: 15
+    subtasks: {}
