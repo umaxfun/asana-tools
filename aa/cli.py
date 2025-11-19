@@ -7,6 +7,7 @@ from aa.commands.init import init
 from aa.commands.validate import validate
 from aa.commands.test_id import test_id
 from aa.commands.cache_info import cache_info
+from aa.commands.list_tasks import list_tasks
 
 
 def setup_logging(debug: bool = False) -> None:
@@ -36,6 +37,7 @@ cli.add_command(init)
 cli.add_command(validate)
 cli.add_command(test_id)
 cli.add_command(cache_info)
+cli.add_command(list_tasks)
 
 
 def main() -> None:

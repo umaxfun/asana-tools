@@ -75,7 +75,7 @@
   - **Property 4: Maximum ID detection** (Requirements 2.5)
   - **Property 6: Cache persistence round-trip** (Requirements 2.7, 3.8, 8.4)
 
-- [ ] 7. Реализовать Asana API клиент и тестовую команду
+- [x] 7. Реализовать Asana API клиент и тестовую команду
   - Создать aa/models/task.py с AsanaTask и TaskUpdate
   - Создать aa/core/asana_client.py с AsanaClient
   - Реализовать get_project_tasks() с сортировкой
