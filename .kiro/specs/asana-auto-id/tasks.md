@@ -118,7 +118,7 @@
   - **Property 7: Tasks with existing IDs are skipped** (Requirements 3.2)
   - **Property 14: Dry-run prevents modifications** (Requirements 5.1, 5.3, 5.4)
 
-- [ ] 10. Добавить реальное обновление задач в aa update
+- [x] 10. Добавить реальное обновление задач в aa update
   - Реализовать update_task_name() в AsanaClient
   - Добавить логику обновления задач в TaskProcessor
   - Реализовать сохранение кэша после обновления

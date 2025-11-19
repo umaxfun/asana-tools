@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import signal
 import sys
 from typing import Optional
 
@@ -145,6 +146,25 @@ async def scan_projects_async(
     # Load cache
     cache = load_cache()
     id_manager = IDManager(cache)
+    
+    # Setup signal handler to save cache on interruption
+    interrupted = False
+    
+    def signal_handler(signum, frame):
+        nonlocal interrupted
+        interrupted = True
+        logger.warning("\nReceived interrupt signal, saving cache...")
+        try:
+            save_cache(id_manager.cache_data)
+            if not silent:
+                click.echo("\n✓ Cache saved before exit")
+        except Exception as e:
+            logger.error(f"Failed to save cache on interrupt: {e}")
+        raise KeyboardInterrupt()
+    
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
     # Create Asana client
     asana_client = AsanaClient(config.asana_token)

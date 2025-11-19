@@ -1,5 +1,6 @@
 """Task processor for handling task hierarchies and ID assignment."""
 
+import asyncio
 import logging
 from typing import Optional
 
@@ -73,7 +74,8 @@ class TaskProcessor:
         tasks = await self.asana.get_project_tasks(project_id)
         logger.info(f"Found {len(tasks)} tasks in project {project_code}")
         
-        # Process each root task (tasks without parents)
+        # Collect all updates first (this determines IDs sequentially)
+        all_updates = []
         for task in tasks:
             # Skip tasks that have a parent (they'll be processed as subtasks)
             if task.get('parent'):
@@ -84,11 +86,37 @@ class TaskProcessor:
                 task,
                 project_code,
                 parent_id=None,
-                dry_run=dry_run
+                dry_run=dry_run,
+                collect_only=True  # Don't update Asana yet
             )
             
-            for update in task_updates:
-                result.add_update(update)
+            all_updates.extend(task_updates)
+        
+        # Now apply all updates in parallel (unless dry-run)
+        if not dry_run and all_updates:
+            logger.info(f"Applying {len(all_updates)} updates in parallel (max 15 concurrent)...")
+            
+            # Semaphore to limit concurrent requests
+            semaphore = asyncio.Semaphore(15)
+            
+            async def apply_update(update: TaskUpdate):
+                """Apply a single update to Asana with concurrency limit."""
+                async with semaphore:
+                    try:
+                        await self.asana.update_task_name(update.task_id, update.new_name)
+                        logger.debug(f"Successfully updated task {update.task_id}")
+                        return update
+                    except Exception as e:
+                        logger.error(f"Failed to update task {update.task_id}: {e}")
+                        raise
+            
+            # Apply all updates concurrently with limit
+            await asyncio.gather(*[apply_update(update) for update in all_updates])
+            logger.info(f"All {len(all_updates)} updates applied successfully")
+        
+        # Add all updates to result
+        for update in all_updates:
+            result.add_update(update)
         
         logger.info(
             f"Processed {result.total_processed} tasks in {project_code}: "
@@ -102,7 +130,8 @@ class TaskProcessor:
         task: dict,
         project_code: str,
         parent_id: Optional[str] = None,
-        dry_run: bool = False
+        dry_run: bool = False,
+        collect_only: bool = False
     ) -> list[TaskUpdate]:
         """Recursively process a task and its subtasks.
         
@@ -111,6 +140,7 @@ class TaskProcessor:
             project_code: Project code (e.g., "PRJ")
             parent_id: Parent task's ID if this is a subtask (e.g., "PRJ-5")
             dry_run: If True, don't actually update tasks or cache
+            collect_only: If True, only collect updates without applying them
             
         Returns:
             List of TaskUpdate objects for all processed tasks
@@ -134,7 +164,8 @@ class TaskProcessor:
                         subtask,
                         project_code,
                         parent_id=existing_id,
-                        dry_run=dry_run
+                        dry_run=dry_run,
+                        collect_only=collect_only
                     )
                     updates.extend(subtask_updates)
             
@@ -165,8 +196,9 @@ class TaskProcessor:
         # Update cache to track ID assignment (even in dry-run for correct preview)
         self.id_manager.update_cache_for_id(new_id, project_code)
         
-        # Update task in Asana (unless dry-run)
-        if not dry_run:
+        # Update task in Asana only if not collecting and not dry-run
+        # When collect_only=True, updates will be applied in batch later
+        if not dry_run and not collect_only:
             try:
                 await self.asana.update_task_name(task_gid, new_name)
                 logger.debug(f"Successfully updated task {task_gid}")
@@ -182,7 +214,8 @@ class TaskProcessor:
                     subtask,
                     project_code,
                     parent_id=new_id,
-                    dry_run=dry_run
+                    dry_run=dry_run,
+                    collect_only=collect_only
                 )
                 updates.extend(subtask_updates)
         

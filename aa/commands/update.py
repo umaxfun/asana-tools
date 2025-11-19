@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import signal
 import sys
 from typing import Optional
 
@@ -59,6 +60,25 @@ async def update_projects_async(
     
     id_manager = IDManager(cache)
     
+    # Setup signal handler to save cache on interruption
+    interrupted = False
+    
+    def signal_handler(signum, frame):
+        nonlocal interrupted
+        interrupted = True
+        logger.warning("\nReceived interrupt signal, saving cache...")
+        if not dry_run:
+            try:
+                save_cache(id_manager.cache_data)
+                click.echo("\n✓ Cache saved before exit")
+            except Exception as e:
+                logger.error(f"Failed to save cache on interrupt: {e}")
+        raise KeyboardInterrupt()
+    
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
     # Create Asana client
     asana_client = AsanaClient(config.asana_token)
     
@@ -87,19 +107,25 @@ async def update_projects_async(
         # Create task processor
         task_processor = TaskProcessor(asana_client, id_manager)
         
-        # Process each project
-        results = []
-        for project in projects_to_update:
+        # Process projects in parallel using asyncio.gather()
+        logger.info(f"Processing {len(projects_to_update)} project(s) in parallel")
+        
+        async def process_single_project(project):
+            """Process a single project and handle errors."""
             try:
-                result = await task_processor.process_project(
+                return await task_processor.process_project(
                     project.asana_id,
                     project.code,
                     dry_run=dry_run
                 )
-                results.append(result)
             except Exception as e:
                 logger.error(f"Error updating project {project.code}: {e}")
                 raise UpdateError(f"Failed to update project {project.code}: {e}")
+        
+        # Process all projects concurrently
+        results = await asyncio.gather(
+            *[process_single_project(project) for project in projects_to_update]
+        )
         
         # Save updated cache (unless dry-run)
         if not dry_run:
