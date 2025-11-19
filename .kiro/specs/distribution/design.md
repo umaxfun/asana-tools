@@ -65,7 +65,7 @@ Developer                    PyPI                        End User
 ```toml
 [project]
 name = "aa-cli"
-version = "0.1.0"
+version = "0.2.0"
 description = "Automatic human-readable ID assignment for Asana tasks"
 requires-python = ">=3.12"
 dependencies = [
