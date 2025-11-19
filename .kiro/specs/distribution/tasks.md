@@ -1,6 +1,6 @@
 # План реализации
 
-- [-] 1. Подготовить проект для публикации на PyPI
+- [x] 1. Подготовить проект для публикации на PyPI
   - Обновить `pyproject.toml`: изменить `name` на `"aa-cli"`
   - Убедиться что `[project.scripts]` содержит `aa = "aa.cli:main"`
   - Добавить метаданные: description, homepage, repository
@@ -9,7 +9,7 @@
   - Проверить что в `dist/` появились файлы `.tar.gz` и `.whl`
   - _Requirements: 3.1, 3.2, 3.3, 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 2. Протестировать локальную установку
+- [x] 2. Протестировать локальную установку
   - Установить локально: `uv tool install dist/aa_cli-0.1.0-py3-none-any.whl`
   - Запустить `aa --version` и проверить вывод
   - Запустить `aa init` и проверить что создается `.aa.yml`
@@ -17,7 +17,7 @@
   - Удалить: `uv tool uninstall aa-cli`
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 3. Создать GitHub Actions workflow для публикации
+- [-] 3. Создать GitHub Actions workflow для публикации
   - Создать файл `.github/workflows/publish.yml`
   - Настроить триггер на теги `v*`
   - Добавить шаги: checkout, setup python, install uv
