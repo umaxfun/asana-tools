@@ -17,7 +17,7 @@
   - Удалить: `uv tool uninstall aa-cli`
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [-] 3. Создать GitHub Actions workflow для публикации
+- [x] 3. Создать GitHub Actions workflow для публикации
   - Создать файл `.github/workflows/publish.yml`
   - Настроить триггер на теги `v*`
   - Добавить шаги: checkout, setup python, install uv
