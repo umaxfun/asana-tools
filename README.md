@@ -284,6 +284,25 @@ uv run pytest
 uv add <package-name>
 ```
 
+### Version Management
+
+To bump the version and release a new tag:
+
+```bash
+# Bump version (updates pyproject.toml and aa/__init__.py)
+python scripts/bump_version.py [major|minor|patch]
+
+# Push commits and create a git tag
+python scripts/push_tag.py
+```
+
+The `push_tag.py` script will:
+- Show git status to help you catch uncommitted changes
+- Ask for confirmation before proceeding
+- Push all commits to origin
+- Create and push a version tag (e.g., `v0.4.3`)
+
+
 ## License
 
 MIT
