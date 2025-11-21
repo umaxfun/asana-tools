@@ -54,8 +54,9 @@ def main():
             print("Aborted.")
             sys.exit(0)
             
-        print(f"Creating and pushing tag: {tag}")
+        print(f"Pushing commits and creating tag: {tag}")
         
+        run_command("git push")
         run_command(f"git tag {tag}")
         run_command(f"git push origin {tag}")
         
