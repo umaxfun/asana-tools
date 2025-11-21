@@ -3,6 +3,7 @@
 import logging
 import click
 
+from aa import __version__
 from aa.commands.init import init
 from aa.commands.validate import validate
 from aa.commands.test_id import test_id
@@ -41,7 +42,8 @@ def setup_logging(verbose: int = 0) -> None:
         logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 
-@click.group()
+@click.group(help=f"Asana Auto-ID tool for automatic task ID assignment (v{__version__})")
+@click.version_option(version=__version__)
 @click.option('--config', default='.aa.yml', help='Path to config file')
 @click.option('-v', '--verbose', count=True, help='Increase verbosity (-v for INFO, -vv for DEBUG)')
 @click.pass_context

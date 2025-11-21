@@ -32,14 +32,7 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 **No installation needed!** Just use `uvx`:
 
 ```bash
-uvx aa-cli --help
-```
-
-**Optional:** Install globally for shorter commands:
-
-```bash
-uv tool install aa-cli
-aa-cli --help
+uvx aa-cli@latest --help
 ```
 
 ## Quick Start
@@ -49,7 +42,7 @@ aa-cli --help
 Create your configuration file:
 
 ```bash
-uvx aa-cli init
+uvx aa-cli@latest init
 ```
 
 This will:
@@ -65,7 +58,7 @@ This will:
 Build the ID cache from your existing tasks:
 
 ```bash
-uvx aa-cli scan
+uvx aa-cli@latest scan
 ```
 
 ### 3. Update
@@ -73,13 +66,13 @@ uvx aa-cli scan
 Preview changes:
 
 ```bash
-uvx aa-cli update --dry-run
+uvx aa-cli@latest update --dry-run
 ```
 
 Apply IDs to tasks:
 
 ```bash
-uvx aa-cli update
+uvx aa-cli@latest update
 ```
 
 Done! Your tasks now have IDs like `PRJ-1`, `PRJ-2`, etc.
@@ -113,10 +106,10 @@ Initialize configuration:
 
 ```bash
 # Interactive mode (recommended)
-uvx aa-cli init
+uvx aa-cli@latest init
 
 # Create template only
-uvx aa-cli init --force
+uvx aa-cli@latest init --force
 ```
 
 ### `scan`
@@ -125,13 +118,13 @@ Scan projects and update cache:
 
 ```bash
 # Scan all projects
-uvx aa-cli scan
+uvx aa-cli@latest scan
 
 # Scan specific project
-uvx aa-cli scan --project PRJ
+uvx aa-cli@latest scan --project PRJ
 
 # Ignore conflicts
-uvx aa-cli scan --ignore-conflicts
+uvx aa-cli@latest scan --ignore-conflicts
 ```
 
 **Safety Check:** `scan` will fail if it detects "foreign" IDs (IDs from other projects) to prevent accidental duplication.
@@ -142,10 +135,10 @@ Remove IDs from all tasks in a project (useful for cleaning up messy projects):
 
 ```bash
 # Reset specific project (requires Asana Project GID)
-uvx aa-cli reset --project-id 123456789
+uvx aa-cli@latest reset --project-id 123456789
 
 # Preview changes without applying
-uvx aa-cli reset --project-id 123456789 --dry-run
+uvx aa-cli@latest reset --project-id 123456789 --dry-run
 ```
 
 ### `update`
@@ -154,13 +147,13 @@ Assign IDs to tasks:
 
 ```bash
 # Preview changes
-uvx aa-cli update --dry-run
+uvx aa-cli@latest update --dry-run
 
 # Apply changes
-uvx aa-cli update
+uvx aa-cli@latest update
 
 # Update specific project
-uvx aa-cli update --project PRJ
+uvx aa-cli@latest update --project PRJ
 ```
 
 ### Options
@@ -190,7 +183,7 @@ projects:
 - Look at URL: `https://app.asana.com/0/1234567890/...`
 - The number after `/0/` is your project ID
 
-Or just use `uvx aa-cli init` - it fetches everything automatically!
+Or just use `uvx aa-cli@latest init` - it fetches everything automatically!
 
 ### `.aa.cache.yaml`
 
@@ -210,14 +203,14 @@ projects:
 
 ```bash
 # Add new tasks in Asana, then:
-uvx aa-cli update
+uvx aa-cli@latest update
 ```
 
 ### Adding New Projects
 
 1. Edit `.aa.yml` to add the project
-2. Run `uvx aa-cli scan --project NEW`
-3. Run `uvx aa-cli update --project NEW`
+2. Run `uvx aa-cli@latest scan --project NEW`
+3. Run `uvx aa-cli@latest update --project NEW`
 
 ### Handling Conflicts
 
@@ -225,16 +218,16 @@ If someone manually added IDs or cache is out of sync:
 
 ```bash
 # Review the conflict
-uvx aa-cli scan
+uvx aa-cli@latest scan
 
 # If safe, update cache to match Asana
-uvx aa-cli scan --ignore-conflicts
+uvx aa-cli@latest scan --ignore-conflicts
 ```
 
 ## Troubleshooting
 
 **"Config file not found"**
-- Run `uvx aa-cli init` first
+- Run `uvx aa-cli@latest init` first
 
 **"Invalid token" or 401 errors**
 - Generate new token at [Asana Developer Console](https://app.asana.com/0/developer-console)

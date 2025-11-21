@@ -207,11 +207,15 @@ def init(ctx: click.Context, force: bool, config: str, debug: bool) -> None:
             # Interactive mode (default): prompt for token and fetch projects
             click.echo("🚀 Interactive initialization\n")
             
-            token = click.prompt(
-                "Enter your Asana Personal Access Token",
-                hide_input=True,
-                type=str
-            )
+            try:
+                token = click.prompt(
+                    "Enter your Asana Personal Access Token",
+                    hide_input=True,
+                    type=str
+                )
+            except click.exceptions.Abort:
+                click.echo()  # Print newline
+                ctx.exit(1)
             
             if not token or not token.strip():
                 raise click.ClickException("Token cannot be empty")
@@ -230,7 +234,7 @@ def init(ctx: click.Context, force: bool, config: str, debug: bool) -> None:
             click.echo(f"✓ Added {len(projects)} projects with URL comments")
             click.echo("\nNext steps:")
             click.echo("1. Edit .aa.yml to:")
-            click.echo("   - Replace 'CODE' with 2-5 letter codes (uppercase) for projects you want to use")
+            click.echo("   - Replace 'REPLACE_ME' with 2-5 letter codes (uppercase) for projects you want to use")
             click.echo("   - Remove projects you don't need")
             click.echo("2. Run 'aa scan' to initialize the cache")
             click.echo("3. Run 'aa update' to assign IDs to tasks")
