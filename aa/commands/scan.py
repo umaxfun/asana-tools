@@ -55,13 +55,36 @@ async def scan_project(
     
     # Extract existing IDs from task names
     existing_ids = []
+    foreign_ids = []
+    
     for task in tasks:
         task_name = task.get('name', '')
+        
+        # Check for ID matching current project
         task_id = id_manager.extract_id(task_name, project_code)
         if task_id:
             existing_ids.append(task_id)
             if not silent:
                 logger.debug(f"Found existing ID: {task_id} in task '{task_name}'")
+            continue
+            
+        # Check for IDs from OTHER projects (foreign IDs)
+        # This is a safety check to prevent overwriting IDs if config is wrong
+        import re
+        from aa.core.id_manager import ID_PATTERN
+        match = re.match(ID_PATTERN, task_name)
+        if match:
+            found_code = match.group(1)
+            if found_code != project_code:
+                foreign_ids.append((found_code, task_name))
+                logger.warning(f"Found foreign ID {found_code} in task '{task_name}' (expected {project_code})")
+
+    if foreign_ids:
+        error_msg = f"Found {len(foreign_ids)} tasks with IDs from other projects (e.g. {foreign_ids[0][0]}).\n"
+        error_msg += f"Expected project code: {project_code}\n"
+        error_msg += "This usually means the project code in .aa.yml does not match the existing tasks.\n"
+        error_msg += "Please update .aa.yml with the correct project code."
+        raise ScanError(error_msg)
     
     if not silent:
         logger.info(f"Found {len(existing_ids)} existing IDs in project {project_code}")

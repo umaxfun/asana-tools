@@ -117,11 +117,12 @@ class AsanaClient:
         # This should never be reached, but just in case
         raise httpx.HTTPError("Request failed after all retries")
     
-    async def get_project_tasks(self, project_id: str) -> list[dict[str, Any]]:
+    async def get_project_tasks(self, project_id: str, limit: int | None = None) -> list[dict[str, Any]]:
         """Get all tasks in a project, sorted by creation date.
         
         Args:
             project_id: The GID of the project
+            limit: Optional limit on number of tasks to fetch
             
         Returns:
             List of task dictionaries sorted by created_at (ascending)
@@ -131,12 +132,16 @@ class AsanaClient:
         """
         logger.debug(f"Fetching tasks for project {project_id}")
         
+        params = {
+            "opt_fields": "gid,name,created_at,parent,num_subtasks"
+        }
+        if limit:
+            params["limit"] = str(limit)
+            
         data = await self._make_request_with_retry(
             "GET",
             f"/projects/{project_id}/tasks",
-            params={
-                "opt_fields": "gid,name,created_at,parent,num_subtasks"
-            }
+            params=params
         )
         
         tasks = data.get('data', [])

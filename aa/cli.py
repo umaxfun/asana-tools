@@ -10,6 +10,7 @@ from aa.commands.cache_info import cache_info
 from aa.commands.list_tasks import list_tasks
 from aa.commands.scan import scan
 from aa.commands.update import update
+from aa.commands.reset import reset
 
 
 def setup_logging(verbose: int = 0) -> None:
@@ -60,6 +61,7 @@ cli.add_command(cache_info)
 cli.add_command(list_tasks)
 cli.add_command(scan)
 cli.add_command(update)
+cli.add_command(reset)
 
 
 def main() -> None:

@@ -55,6 +55,7 @@ uvx aa-cli init
 This will:
 - Prompt for your Asana Personal Access Token
 - Fetch all your projects automatically
+- Detect existing project codes from your tasks
 - Create `.aa.yml` with everything configured
 
 **Get your token:** [Asana Developer Console](https://app.asana.com/0/developer-console) → "Create new token"
@@ -131,6 +132,20 @@ uvx aa-cli scan --project PRJ
 
 # Ignore conflicts
 uvx aa-cli scan --ignore-conflicts
+```
+
+**Safety Check:** `scan` will fail if it detects "foreign" IDs (IDs from other projects) to prevent accidental duplication.
+
+### `reset`
+
+Remove IDs from all tasks in a project (useful for cleaning up messy projects):
+
+```bash
+# Reset specific project (requires Asana Project GID)
+uvx aa-cli reset --project-id 123456789
+
+# Preview changes without applying
+uvx aa-cli reset --project-id 123456789 --dry-run
 ```
 
 ### `update`

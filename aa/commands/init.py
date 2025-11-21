@@ -2,11 +2,13 @@
 
 import asyncio
 import logging
+import re
 from pathlib import Path
 import click
 import yaml
 
 from aa.core.asana_client import AsanaClient
+from aa.core.id_manager import ID_PATTERN
 from aa.models.config import Config, ProjectConfig
 
 
@@ -23,6 +25,42 @@ def create_template_config() -> Config:
             ProjectConfig(code='TASK', asana_id='9876543210987654')
         ]
     )
+
+
+async def detect_project_code(client: AsanaClient, project_id: str) -> str | None:
+    """Detect project code from existing tasks.
+    
+    Fetches a sample of tasks and checks if they have IDs matching the pattern.
+    Raises click.ClickException if multiple different project codes are found.
+    """
+    try:
+        # Fetch recent tasks (limit to 100 as requested)
+        tasks = await client.get_project_tasks(project_id, limit=100)
+        
+        found_codes = set()
+        
+        for task in tasks:
+            name = task['name']
+            match = re.match(ID_PATTERN, name)
+            if match:
+                found_codes.add(match.group(1))
+        
+        if len(found_codes) > 1:
+            codes_str = ", ".join(sorted(found_codes))
+            raise click.ClickException(
+                f"Multiple project codes found in project {project_id}: {codes_str}. "
+                "Please fix the task names or use 'aa reset' to clean up IDs."
+            )
+            
+        if found_codes:
+            return found_codes.pop()
+                
+    except click.ClickException:
+        raise
+    except Exception as e:
+        logger.warning(f"Failed to detect code for project {project_id}: {e}")
+        
+    return None
 
 
 async def fetch_all_projects(token: str) -> list[dict]:
@@ -47,6 +85,25 @@ async def fetch_all_projects(token: str) -> list[dict]:
             all_projects.extend(projects)
         
         click.echo(f"✓ Found {len(all_projects)} project(s)")
+        
+        # Detect codes for all projects in parallel
+        click.echo("Scanning projects for existing codes...")
+        
+        async def process_project(project):
+            code = await detect_project_code(client, project['gid'])
+            if code:
+                project['detected_code'] = code
+            return project
+            
+        # Process all projects concurrently
+        tasks = [process_project(p) for p in all_projects]
+        all_projects = await asyncio.gather(*tasks)
+        
+        # Count how many codes were detected
+        detected_count = sum(1 for p in all_projects if 'detected_code' in p)
+        if detected_count > 0:
+            click.echo(f"✓ Detected existing codes for {detected_count} project(s)")
+            
         return all_projects
         
     finally:
@@ -63,7 +120,10 @@ def write_config_with_comments(config_path: Path, token: str, projects: list[dic
     """
     # Create ProjectConfig instances with placeholder codes
     project_configs = [
-        ProjectConfig(code='CODE', asana_id=project['gid'])
+        ProjectConfig(
+            code=project.get('detected_code', 'CODE'), 
+            asana_id=project['gid']
+        )
         for project in projects
     ]
     
@@ -87,7 +147,13 @@ def write_config_with_comments(config_path: Path, token: str, projects: list[dic
         # Add comment with project name and URL
         lines.append(f"  # {project_name}")
         lines.append(f"  # https://app.asana.com/0/{asana_id}")
-        lines.append(f"  - code: CODE  # TODO: Replace with 2-5 letter code (uppercase)")
+        
+        detected_code = project.get('detected_code')
+        if detected_code:
+            lines.append(f"  - code: {detected_code}  # Detected from existing tasks")
+        else:
+            lines.append(f"  - code: REPLACE_ME  # TODO: Replace with 2-5 letter code (uppercase)")
+            
         lines.append(f"    asana_id: '{asana_id}'")
     
     config_path.write_text('\n'.join(lines) + '\n')
