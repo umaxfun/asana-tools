@@ -7,6 +7,7 @@ Automatic human-readable ID assignment for Asana tasks and subtasks.
 `aa-cli` automatically adds short, readable IDs to your Asana tasks - like `PRJ-5` or `PRJ-5-1`. This makes tasks easier to reference in discussions, documentation, and team communication.
 
 **Key Features:**
+
 - 🔢 Automatic hierarchical ID assignment
 - 🔄 Preserves existing IDs and detects conflicts
 - 🌳 Supports unlimited nesting depth
@@ -46,6 +47,7 @@ uvx aa-cli@latest init
 ```
 
 This will:
+
 - Prompt for your Asana Personal Access Token
 - Fetch all your projects automatically
 - Detect existing project codes from your tasks
@@ -169,19 +171,30 @@ All commands support:
 ### `.aa.yml`
 
 ```yaml
-asana_token: 'your-personal-access-token'
+asana_token: "your-personal-access-token"
 projects:
-  - code: PRJ      # 2-5 uppercase letters
-    asana_id: '1234567890'
-  
+  - code: PRJ # 2-5 uppercase letters
+    asana_id: "1234567890"
+
   - code: TSK
-    asana_id: '9876543210'
+    asana_id: "9876543210"
 ```
 
 **Finding project IDs:**
-- Open project in Asana
-- Look at URL: `https://app.asana.com/0/1234567890/...`
-- The number after `/0/` is your project ID
+
+There are two ways to get a project ID:
+
+1. **From task URL (new format):**
+
+   - Open any task in the project
+   - Copy the task link
+   - Find the number after `/project/`: `https://app.asana.com/.../project/123123123/task/...`
+   - `123123123` is your project ID
+
+2. **From project URL:**
+   - Open the project in Asana
+   - Look at the URL: `https://app.asana.com/0/123123123/...`
+   - The number after `/0/` is your project ID
 
 Or just use `uvx aa-cli@latest init` - it fetches everything automatically!
 
@@ -194,7 +207,7 @@ projects:
   PRJ:
     last_root: 42
     subtasks:
-      '5': 3      # PRJ-5-3 is last subtask of PRJ-5
+      "5": 3 # PRJ-5-3 is last subtask of PRJ-5
 ```
 
 ## Workflow
@@ -227,18 +240,22 @@ uvx aa-cli@latest scan --ignore-conflicts
 ## Troubleshooting
 
 **"Config file not found"**
+
 - Run `uvx aa-cli@latest init` first
 
 **"Invalid token" or 401 errors**
+
 - Generate new token at [Asana Developer Console](https://app.asana.com/0/developer-console)
 - Update `.aa.yml`
 
 **"Conflict detected"**
+
 - Someone may have manually added IDs
 - Review tasks in Asana
 - Use `--ignore-conflicts` if safe
 
 **Tasks not getting IDs**
+
 - Check if tasks already have IDs (they're skipped)
 - Make sure you're running `update`, not just `scan`
 - Remove `--dry-run` flag
@@ -297,11 +314,11 @@ python scripts/push_tag.py
 ```
 
 The `push_tag.py` script will:
+
 - Show git status to help you catch uncommitted changes
 - Ask for confirmation before proceeding
 - Push all commits to origin
 - Create and push a version tag (e.g., `v0.4.3`)
-
 
 ## License
 
