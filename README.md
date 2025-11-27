@@ -53,6 +53,8 @@ This will:
 - Detect existing project codes from your tasks
 - Create `.aa.yml` with everything configured
 
+**Note:** For workspaces with 100+ projects, automatic code detection is skipped to avoid API rate limits. In this case, only the first project is added as an example - you can manually add your projects to the config.
+
 **Get your token:** [Asana Developer Console](https://app.asana.com/0/developer-console) → "Create new token"
 
 ### 2. Scan
@@ -163,7 +165,8 @@ uvx aa-cli@latest update --project PRJ
 All commands support:
 
 - `--config PATH` - Custom config file location
-- `-v` - Verbose output (use `-vv` for debug)
+- `-v` - Verbose output (INFO level)
+- `-vv` - Debug output (DEBUG level, shows API requests)
 - `--help` - Show help
 
 ## Configuration
